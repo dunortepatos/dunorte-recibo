@@ -251,7 +251,7 @@ tr:last-child td{border-bottom:none}
 .rc-assinatura-linha{display:flex;align-items:flex-end;gap:0;margin-top:3px}
 .rc-assinatura-label{font-weight:700;font-size:12px;white-space:nowrap;flex-shrink:0;min-width:195px;padding-bottom:2px}
 .rc-assinatura-area{flex:1;display:flex;flex-direction:column;align-items:center}
-.rc-carimbo-img{width:240px;max-width:86%;margin:0 auto 3px;display:block}
+.rc-carimbo-img{width:260px;max-width:88%;margin:0 auto 3px;display:block}
 .rc-assinatura-img{height:44px;display:flex;align-items:flex-end;justify-content:center}
 .rc-assinatura-img img{max-height:42px;max-width:100%}
 .rc-assinatura-linha-base{width:100%;border-bottom:1.5px solid #111}
@@ -943,30 +943,30 @@ function limparAssinatura(){const c=document.getElementById('canvas-assinatura')
 
 const CARIMBO_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="900" height="470" viewBox="0 0 900 470">
   <defs>
-    <filter id="stampRough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="8"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .18"/></feComponentTransfer><feComposite operator="in" in2="SourceGraphic"/></filter>
+    <filter id="stampRough"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="12"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .12"/></feComponentTransfer><feComposite operator="in" in2="SourceGraphic"/></filter>
   </defs>
-  <g fill="none" stroke="#123bb3" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="34" y="34" width="832" height="402" rx="42" stroke-width="14"/>
+  <g fill="none" stroke="#123bb3" stroke-linecap="round" stroke-linejoin="round" opacity=".98">
+    <rect x="34" y="34" width="832" height="402" rx="42" stroke-width="12"/>
     <path d="M95 286h710" stroke-width="5"/>
-    <path d="M95 285h710" stroke-width="2" opacity=".55"/>
+    <path d="M95 285h710" stroke-width="2" opacity=".5"/>
   </g>
   <g fill="#123bb3" font-family="Arial Black,Arial,sans-serif" text-anchor="middle">
-    <text x="445" y="150" font-size="63" letter-spacing="18">GRUPO</text>
-    <text x="580" y="246" font-size="92" letter-spacing="-4">DUNORTE</text>
-    <text x="475" y="358" font-size="54" font-family="Impact,Arial Black,Arial,sans-serif">Dunorte Comércio de Madeiras LTDA</text>
-    <text x="380" y="424" font-size="56">Welington Mota - <tspan font-family="Arial, sans-serif" font-style="italic" font-weight="400">Vendedor</tspan></text>
+    <text x="570" y="148" font-size="55" letter-spacing="19">GRUPO</text>
+    <text x="585" y="246" font-size="80" letter-spacing="-3">DUNORTE</text>
+    <text x="450" y="360" font-size="48" font-family="Impact,Arial Black,Arial,sans-serif">Dunorte Comércio de Madeiras LTDA</text>
+    <text x="365" y="424" font-size="50">Welington Mota - <tspan font-family="Arial, sans-serif" font-style="italic" font-weight="400">Vendedor</tspan></text>
   </g>
-  <g fill="none" stroke="#123bb3" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M102 96h42c28 0 44-45 83-45s55 45 83 45h43v136c-16 42-58 70-126 70s-109-28-125-70z"/>
-    <path d="M118 113h31c29 0 46-39 78-39s49 39 78 39h31v111c-16 35-53 57-109 57s-93-22-109-57z"/>
-    <path d="M226 147c-48 0-75 33-76 72"/>
-    <path d="M226 147c48 0 75 33 76 72"/>
-    <path d="M226 146v98"/>
-    <path d="M191 245c18 26 53 27 71 0"/>
-    <path d="M176 190c14-22 34-35 50-35 20 0 36 13 50 35"/>
+  <g fill="none" stroke="#123bb3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M104 100h38c25 0 40-43 76-43s51 43 76 43h38v132c-15 39-53 64-114 64s-99-25-114-64z"/>
+    <path d="M121 117h28c26 0 41-36 69-36s43 36 69 36h28v107c-14 31-47 51-97 51s-83-20-97-51z"/>
+    <path d="M218 143c-42 0-66 30-67 66"/>
+    <path d="M218 143c42 0 66 30 67 66"/>
+    <path d="M218 143v94"/>
+    <path d="M185 238c17 25 49 25 66 0"/>
+    <path d="M169 187c13-20 31-32 49-32s36 12 49 32"/>
   </g>
   <g filter="url(#stampRough)" opacity=".75">
-    <rect x="34" y="34" width="832" height="402" rx="42" fill="none" stroke="#fff" stroke-width="20"/>
+    <rect x="34" y="34" width="832" height="402" rx="42" fill="none" stroke="#fff" stroke-width="18"/>
     <rect x="70" y="70" width="760" height="330" fill="#fff"/>
   </g>
 </svg>`;
