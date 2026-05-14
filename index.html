@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<title>RecibosApp — Sistema de Emissão</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('nn6lhh8vjP6GtU8vV');</script>
+<style>
+:root{
+  --verde:#1a472a;--verde-medio:#2d6a4f;--verde-claro:#52b788;
+  --dourado:#c9a84c;--dourado-claro:#e8c96d;
+  --creme:#faf7f0;--creme-escuro:#f0ead6;
+  --cinza:#6b7280;--cinza-escuro:#374151;
+  --sombra:0 4px 24px rgba(26,71,42,.12);--borda:1px solid #d4c89a;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--creme);color:var(--cinza-escuro);min-height:100vh}
+
+/* ===================== TELA DE LOGIN ===================== */
+#tela-login{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  background:linear-gradient(135deg,#0f2d17 0%,#1a472a 50%,#2d6a4f 100%);
+  padding:20px;
+}
+.login-card{
+  background:#fff;border-radius:16px;
+  box-shadow:0 24px 80px rgba(0,0,0,.35);
+  width:100%;max-width:420px;overflow:hidden;
+}
+.login-header{
+  background:linear-gradient(135deg,var(--verde),var(--verde-medio));
+  padding:32px 36px 28px;text-align:center;color:#fff;
+}
+.login-logo{
+  width:60px;height:60px;background:var(--dourado);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-size:28px;margin:0 auto 14px;
+}
+.login-header h1{font-size:1.5rem;font-weight:700;letter-spacing:.5px}
+.login-header p{font-size:.8rem;color:var(--verde-claro);margin-top:4px;letter-spacing:.8px;text-transform:uppercase}
+.login-body{padding:30px 36px 36px}
+.login-group{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.login-group label{font-size:.76rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:.6px}
+.login-input-wrap{position:relative}
+.login-input-wrap input{
+  width:100%;border:1.5px solid #d4c89a;border-radius:8px;padding:11px 40px 11px 14px;
+  font-family:Arial,Helvetica,sans-serif;font-size:.95rem;color:var(--cinza-escuro);
+  background:var(--creme);transition:border-color .2s,box-shadow .2s;outline:none;
+}
+.login-input-wrap input:focus{border-color:var(--verde-claro);box-shadow:0 0 0 3px rgba(82,183,136,.14);background:#fff}
+.toggle-pass{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--cinza);font-size:16px;padding:2px;
+}
+.login-erro{
+  background:#fee2e2;border:1px solid #fca5a5;border-radius:7px;
+  padding:9px 14px;font-size:.83rem;color:#b91c1c;margin-bottom:14px;display:none;
+}
+.login-sucesso{
+  background:#d1fae5;border:1px solid #6ee7b7;border-radius:7px;
+  padding:9px 14px;font-size:.83rem;color:#065f46;margin-bottom:14px;display:none;
+}
+.btn-login{
+  width:100%;padding:12px;background:var(--verde);color:#fff;border:none;
+  border-radius:8px;font-family:Arial,Helvetica,sans-serif;font-size:.96rem;font-weight:700;
+  cursor:pointer;letter-spacing:.4px;transition:all .18s;
+}
+.btn-login:hover{background:var(--verde-medio);transform:translateY(-1px);box-shadow:0 4px 14px rgba(26,71,42,.22)}
+.login-link{
+  display:block;text-align:center;margin-top:14px;font-size:.82rem;
+  color:var(--verde-medio);cursor:pointer;text-decoration:underline;
+}
+.login-link:hover{color:var(--verde)}
+.login-separator{text-align:center;font-size:.78rem;color:var(--cinza);margin:6px 0 14px}
+
+/* Painel de recuperação */
+#painel-recuperacao{display:none}
+#painel-login{display:block}
+
+/* ===================== APP (após login) ===================== */
+#app{display:block}
+
+/* HEADER */
+.app-header{background:var(--verde);color:var(--creme);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;box-shadow:0 2px 12px rgba(0,0,0,.18);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;background:var(--dourado);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px}
+.app-header h1{font-size:1.15rem;font-weight:700;letter-spacing:.4px}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-num{background:var(--dourado);color:var(--verde);border-radius:7px;padding:5px 15px;font-family:'Courier New',monospace;font-weight:700;font-size:.95rem;letter-spacing:1px}
+.btn-logout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 13px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:5px;transition:background .18s}
+.btn-logout:hover{background:rgba(255,255,255,.28)}
+button[onclick="fazerLogout()"],.nav-tab[onclick="showTab('configuracoes',this)"]{display:none!important}
+
+/* TABS */
+.nav-tabs{background:var(--verde-medio);display:flex;padding:0 40px;overflow-x:auto}
+.nav-tab{padding:11px 20px;color:rgba(250,247,240,.65);cursor:pointer;font-size:.85rem;font-weight:700;letter-spacing:.3px;border-bottom:3px solid transparent;transition:all .2s;user-select:none;white-space:nowrap}
+.nav-tab:hover{color:var(--creme)}
+.nav-tab.active{color:var(--dourado-claro);border-bottom-color:var(--dourado-claro);background:rgba(0,0,0,.12)}
+
+/* MAIN / PANEL */
+.main{max-width:1100px;margin:0 auto;padding:28px 22px 55px}
+.panel{background:#fff;border-radius:12px;box-shadow:var(--sombra);border:var(--borda);overflow:hidden;display:none}
+.panel.active{display:block}
+.panel-header{background:linear-gradient(135deg,var(--verde) 70%,var(--verde-medio));color:var(--creme);padding:18px 28px;display:flex;align-items:center;gap:11px}
+.ph-icon{width:34px;height:34px;background:rgba(201,168,76,.22);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.panel-header h2{font-size:1.05rem;font-weight:700}
+.panel-header p{font-size:.76rem;color:var(--verde-claro);margin-top:2px}
+
+/* FORM */
+.form-body{padding:24px 28px}
+.form-section{margin-bottom:20px}
+.form-section-title{font-size:.88rem;color:var(--verde);font-weight:700;letter-spacing:.4px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--creme-escuro);display:flex;align-items:center;gap:7px}
+.form-section-title::before{content:'';width:4px;height:14px;background:var(--dourado);border-radius:2px;display:inline-block}
+.form-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--creme-escuro);flex-wrap:wrap}
+.form-section-head .form-section-title{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.btn-preencher{white-space:normal;text-align:left;line-height:1.2}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.form-grid.three{grid-template-columns:1fr 1fr 1fr}
+.form-grid.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.span2{grid-column:span 2}
+.form-group.span3{grid-column:span 3}
+label{font-size:.74rem;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:.6px}
+input,textarea,select{border:1.5px solid #d4c89a;border-radius:6px;padding:8px 11px;font-family:Arial,Helvetica,sans-serif;font-size:.91rem;color:var(--cinza-escuro);background:var(--creme);transition:border-color .2s,box-shadow .2s;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--verde-claro);box-shadow:0 0 0 3px rgba(82,183,136,.12);background:#fff}
+input[readonly]{background:#f5f3ea;color:var(--verde);font-weight:700;cursor:default}
+.num-field{font-family:'Courier New',monospace!important;font-weight:700!important;color:var(--dourado)!important;background:#fffdf5!important;border-color:var(--dourado)!important}
+textarea{resize:vertical;min-height:52px}
+.valor-destaque{font-weight:700!important;color:var(--cinza-escuro)!important}
+.extenso-field{font-style:italic;color:var(--cinza)!important;font-size:.86rem!important;background:#f5f3ea!important}
+
+/* BTNS */
+.btn{padding:8px 18px;border-radius:6px;border:none;font-family:Arial,Helvetica,sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--verde);color:var(--creme)}
+.btn-primary:hover{background:var(--verde-medio);transform:translateY(-1px)}
+.btn-dourado{background:var(--dourado);color:var(--verde)}
+.btn-dourado:hover{background:var(--dourado-claro)}
+.btn-outline{background:transparent;color:var(--verde);border:1.5px solid var(--verde)}
+.btn-outline:hover{background:var(--creme-escuro)}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-pdf{background:#b91c1c;color:#fff}
+.btn-pdf:hover{background:#991b1b}
+.btn-sm{padding:4px 11px;font-size:.76rem}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;padding:16px 28px 22px;border-top:1px solid var(--creme-escuro);flex-wrap:wrap}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.72rem;font-weight:700}
+.badge-dourado{background:#fef3c7;color:#92400e}
+
+/* RELATÓRIOS */
+.filter-bar{padding:16px 28px;background:var(--creme-escuro);border-bottom:var(--borda);display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{padding:7px 10px;font-size:.84rem;background:#fff;min-width:165px}
+.rel-table-wrap{padding:20px 28px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th{background:var(--verde);color:var(--creme);padding:9px 12px;text-align:left;font-weight:700;font-size:.74rem;letter-spacing:.4px;text-transform:uppercase}
+th:first-child{border-radius:6px 0 0 6px}
+th:last-child{border-radius:0 6px 6px 0}
+td{padding:8px 12px;border-bottom:1px solid #ede8d5;vertical-align:middle}
+tr:hover td{background:#faf7f0}
+tr:last-child td{border-bottom:none}
+.empty-state{text-align:center;padding:50px 20px;color:var(--cinza)}
+.empty-state .es-icon{font-size:2.6rem;margin-bottom:10px}
+.rel-summary{display:flex;gap:12px;padding:16px 28px;border-top:var(--borda);flex-wrap:wrap}
+.summary-card{background:var(--creme-escuro);border-radius:9px;padding:12px 16px;flex:1;min-width:145px;border:var(--borda)}
+.sc-label{font-size:.7rem;color:var(--cinza);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.sc-value{font-size:1.2rem;font-weight:700;color:var(--verde);margin-top:3px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,30,15,.78);z-index:1000;align-items:center;justify-content:center;padding:14px}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;width:100%;max-width:820px;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.4);overflow:hidden}
+.modal-toolbar{background:var(--verde);color:var(--creme);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;flex-wrap:wrap}
+.modal-toolbar h3{font-size:.96rem;font-weight:700}
+.modal-toolbar-btns{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.modal-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.96rem;display:flex;align-items:center;justify-content:center;transition:background .18s;flex-shrink:0}
+.modal-close:hover{background:rgba(255,255,255,.28)}
+.modal-scroll{overflow-y:auto;padding:20px;background:#c0bebe;flex:1}
+
+/* ===================== RECIBO (30% mais baixo) =====================
+   Referência original: padding 22/26/28, margens 18/8, fontes 13.5
+   Reduzido ~30%: padding 14/18/18, margens 12/5, fontes 12
+   ================================================================== */
+#recibo-preview{
+  background:#d4d0d0;
+  width:760px;
+  margin:0 auto;
+  padding:14px 20px 18px;
+  border:2px solid #555;
+  border-radius:11px;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:12px;
+  color:#111;
+  position:relative;
+}
+
+.rc-topo{
+  display:grid;
+  grid-template-columns:145px 1fr 175px;
+  align-items:center;
+  margin-bottom:12px;
+  gap:8px;
+}
+.rc-num-box{
+  border:2px solid #555;border-radius:6px;padding:4px 10px;
+  font-weight:700;font-size:12.5px;color:#111;
+  display:flex;align-items:center;gap:5px;
+  background:#fff;min-height:36px;
+}
+.rc-num-label{font-weight:400;font-size:12px}
+.rc-num-val{color:#1a3bcc;font-size:16px;font-weight:700}
+.rc-titulo{
+  text-align:center;font-size:21px;font-weight:700;
+  letter-spacing:7px;text-decoration:underline;color:#111;
+}
+.rc-valor-box{
+  border:2px solid #555;border-radius:6px;background:#fff;
+  min-height:36px;display:flex;flex-direction:column;justify-content:center;
+}
+.rc-valor-label-topo{font-size:10px;color:#555;text-align:center;padding:2px 7px 0;font-weight:400}
+.rc-valor-input-area{
+  border-top:1px solid #a0c8a0;margin:2px 4px 3px;
+  padding:1px 5px;min-height:18px;font-weight:700;font-size:12.5px;color:#111;
+}
+
+.rc-linha{display:flex;align-items:flex-start;margin-bottom:5px;gap:0}
+.rc-campo-label{font-weight:700;font-size:12px;white-space:nowrap;min-width:195px;flex-shrink:0;padding-top:2px}
+.rc-campo-valor{
+  flex:1;background:#fff;border:1px solid #bbb;border-radius:3px;
+  padding:2px 7px;min-height:21px;font-size:12px;word-break:break-word;
+}
+.rc-campo-valor.multi{min-height:38px;white-space:pre-wrap}
+
+.rc-importancia-linha{display:flex;align-items:flex-start;margin-bottom:5px;gap:0}
+.rc-importancia-label{font-weight:700;font-size:12px;white-space:nowrap;min-width:195px;flex-shrink:0;padding-top:2px}
+.rc-importancia-val{flex:1;background:#fff;border:1px solid #bbb;border-radius:3px;padding:2px 7px;min-height:21px;font-size:12px;font-style:italic;color:#111;word-break:break-word}
+
+.rc-firmamos{font-weight:700;font-size:12px;margin:10px 0 7px;color:#111}
+
+.rc-cidade-data{display:flex;align-items:center;margin-bottom:12px;gap:4px;font-size:12px}
+.rc-data-val{background:#fff;border:1px solid #bbb;border-radius:3px;padding:2px 7px;font-size:12px;flex:1;text-align:right}
+
+.rc-emitente-bloco{margin-bottom:10px}
+
+.rc-assinatura-linha{display:flex;align-items:flex-end;gap:0;margin-top:3px}
+.rc-assinatura-label{font-weight:700;font-size:12px;white-space:nowrap;flex-shrink:0;min-width:195px;padding-bottom:2px}
+.rc-assinatura-area{flex:1;display:flex;flex-direction:column;align-items:center}
+.rc-assinatura-img{height:44px;display:flex;align-items:flex-end;justify-content:center}
+.rc-assinatura-img img{max-height:42px;max-width:100%}
+.rc-assinatura-linha-base{width:100%;border-bottom:1.5px solid #111}
+
+/* PDF/PRINT LOADING */
+.pdf-loading{display:none;position:fixed;inset:0;background:rgba(26,71,42,.85);z-index:2000;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff}
+.pdf-loading.open{display:flex}
+.spinner{width:42px;height:42px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--dourado);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{position:fixed;bottom:26px;right:26px;background:var(--verde);color:var(--creme);padding:12px 18px;border-radius:9px;font-size:.86rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:9999;display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* PRINT */
+@media print{
+  body>*:not(#print-wrap){display:none!important}
+  #print-wrap{display:block!important;position:fixed;top:0;left:0;width:100%;background:#fff;padding:0}
+  #print-wrap #recibo-preview{width:100%!important;box-shadow:none!important;margin:0 auto!important;border:2px solid #555!important;border-radius:0!important;background:#fff!important;font-size:10.5px!important;padding:10px 14px!important}
+}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+  .form-grid,.form-grid.three{grid-template-columns:1fr}
+  .form-group.span2,.form-group.span3{grid-column:span 1}
+  .main{padding:12px 8px 40px}
+  .form-body,.form-actions{padding:12px}
+  .filter-bar{padding:10px 12px}
+  .rel-table-wrap{padding:10px}
+  .app-header{padding:0 12px}
+  #recibo-preview{width:100%;padding:10px;font-size:11px}
+  .modal-scroll{padding:6px}
+  .rc-topo{grid-template-columns:110px 1fr 130px}
+  .rc-titulo{font-size:15px;letter-spacing:4px}
+  .rc-campo-label,.rc-assinatura-label{min-width:150px}
+  .login-body{padding:22px 22px 28px}
+  .login-header{padding:24px 22px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== TELA DE LOGIN ==================== -->
+<div id="tela-login" style="display:none">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">📄</div>
+      <h1>RecibosApp</h1>
+      <p>Sistema de Emissão de Recibos</p>
+    </div>
+    <div class="login-body">
+
+      <!-- PAINEL LOGIN -->
+      <div id="painel-login">
+        <div id="login-erro" class="login-erro"></div>
+        <div class="login-group">
+          <label>Senha Administrativa</label>
+          <div class="login-input-wrap">
+            <input type="password" id="campo-senha" placeholder="Digite sua senha"
+              onkeydown="if(event.key==='Enter')fazerLogin()">
+            <button class="toggle-pass" onclick="toggleSenha('campo-senha',this)" title="Mostrar/ocultar">👁️</button>
+          </div>
+        </div>
+        <button class="btn-login" onclick="fazerLogin()">🔐 Entrar</button>
+        <span class="login-link" onclick="mostrarRecuperacao()">Esqueci minha senha</span>
+      </div>
+
+      <!-- PAINEL RECUPERAÇÃO -->
+      <div id="painel-recuperacao">
+        <div id="rec-erro" class="login-erro"></div>
+        <div id="rec-sucesso" class="login-sucesso"></div>
+
+        <!-- Passo 1: informar e-mail -->
+        <div id="rec-passo1">
+          <p style="font-size:.84rem;color:var(--cinza);margin-bottom:14px;line-height:1.5">
+            Digite o e-mail cadastrado para receber a nova senha.
+          </p>
+          <div class="login-group">
+            <label>E-mail cadastrado</label>
+            <input type="email" id="campo-email-rec" placeholder="seu@email.com"
+              onkeydown="if(event.key==='Enter')enviarRecuperacao()">
+          </div>
+          <button class="btn-login" onclick="enviarRecuperacao()">📧 Enviar Nova Senha</button>
+        </div>
+
+        <div id="rec-passo2" style="display:none">
+          <p style="font-size:.84rem;color:var(--cinza);margin-bottom:14px;line-height:1.5">
+            Verifique seu e-mail e use a senha temporária recebida para definir uma nova senha abaixo.
+          </p>
+          <div class="login-group">
+            <label>Nova Senha</label>
+            <div class="login-input-wrap">
+              <input type="password" id="campo-nova-senha" placeholder="Digite a nova senha"
+                onkeydown="if(event.key==='Enter')confirmarNovaSenha()">
+              <button class="toggle-pass" onclick="toggleSenha('campo-nova-senha',this)">👁️</button>
+            </div>
+          </div>
+          <div class="login-group">
+            <label>Confirmar Nova Senha</label>
+            <div class="login-input-wrap">
+              <input type="password" id="campo-confirma-senha" placeholder="Repita a nova senha"
+                onkeydown="if(event.key==='Enter')confirmarNovaSenha()">
+              <button class="toggle-pass" onclick="toggleSenha('campo-confirma-senha',this)">👁️</button>
+            </div>
+          </div>
+          <button class="btn-login" onclick="confirmarNovaSenha()">✅ Redefinir Senha</button>
+        </div>
+
+        <span class="login-link" onclick="voltarLogin()" style="margin-top:10px">← Voltar ao login</span>
+      </div>
+
+      <!-- CONFIGURAÇÕES (só aparecem no 1º acesso) -->
+      <div id="painel-config" style="display:none">
+        <p style="font-size:.84rem;color:var(--cinza);margin-bottom:16px;line-height:1.5">
+          <strong>Primeiro acesso!</strong> Configure a senha e e-mail de recuperação.
+        </p>
+        <div id="cfg-erro" class="login-erro"></div>
+        <div class="login-group">
+          <label>Senha Administrativa</label>
+          <div class="login-input-wrap">
+            <input type="password" id="cfg-senha" placeholder="Crie uma senha forte">
+            <button class="toggle-pass" onclick="toggleSenha('cfg-senha',this)">👁️</button>
+          </div>
+        </div>
+        <div class="login-group">
+          <label>Confirmar Senha</label>
+          <div class="login-input-wrap">
+            <input type="password" id="cfg-confirma" placeholder="Repita a senha">
+            <button class="toggle-pass" onclick="toggleSenha('cfg-confirma',this)">👁️</button>
+          </div>
+        </div>
+        <div class="login-group">
+          <label>E-mail para Recuperação</label>
+          <input type="email" id="cfg-email" placeholder="seu@email.com">
+        </div>
+        <button class="btn-login" onclick="salvarConfig()">💾 Salvar e Entrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app">
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-icon">📄</div>
+      <div>
+        <h1>RecibosApp</h1>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-num" id="header-num">Nº 0001</div>
+      <button class="btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+    </div>
+  </header>
+
+  <nav class="nav-tabs">
+    <div class="nav-tab active"  onclick="showTab('emissao',this)">✍️ Emitir Recibo</div>
+    <div class="nav-tab" onclick="showTab('relatorio',this)">📋 Rel. Completo</div>
+    <div class="nav-tab" onclick="showTab('rel-emitente',this)">👤 Por Emitente</div>
+    <div class="nav-tab" onclick="showTab('rel-recebedor',this)">🏢 Por Recebedor</div>
+    <div class="nav-tab" onclick="showTab('configuracoes',this)">⚙️ Configurações</div>
+  </nav>
+
+  <div class="main">
+
+    <!-- EMISSÃO -->
+    <div id="tab-emissao" class="panel active">
+      <div class="panel-header">
+        <div class="ph-icon">📝</div>
+        <div><h2>Emissão de Recibo</h2><p>Preencha os dados abaixo</p></div>
+      </div>
+      <div class="form-body">
+
+        <div class="form-section">
+          <div class="form-section-title">Identificação</div>
+          <div class="form-grid three">
+            <div class="form-group">
+              <label>Número do Recibo</label>
+              <input type="text" id="num-recibo" class="num-field" readonly>
+            </div>
+            <div class="form-group">
+              <label>Data de Emissão</label>
+              <input type="text" id="data-emissao" readonly>
+            </div>
+            <div class="form-group">
+              <label>Valor (R$)</label>
+              <input type="text" id="valor" class="valor-destaque" placeholder="0,00"
+                oninput="formatarValor(this);gerarExtenso()">
+            </div>
+            <div class="form-group span3">
+              <label>Valor por Extenso</label>
+              <input type="text" id="valor-extenso" class="extenso-field" readonly
+                placeholder="Preenchimento automático ao digitar o valor">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-title">Dados do Recebedor</div>
+            <button class="btn btn-outline btn-sm btn-preencher" type="button" onclick="preencherDadosDunorte('rec')">PREENCHER COM DADOS DUNORTE</button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nome / Razão Social</label>
+              <input type="text" id="rec-nome" placeholder="Nome completo ou razão social">
+            </div>
+            <div class="form-group">
+              <label>CPF / CNPJ</label>
+              <input type="text" id="rec-doc" placeholder="000.000.000-00" oninput="formatarDoc(this)">
+            </div>
+            <div class="form-group span2">
+              <label>Endereço Completo</label>
+              <input type="text" id="rec-end" placeholder="Rua, número, bairro, cidade - UF, CEP">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-head">
+            <div class="form-section-title">Dados do Pagador</div>
+            <button class="btn btn-outline btn-sm btn-preencher" type="button" onclick="preencherDadosDunorte('emi')">PREENCHER COM DADOS DUNORTE</button>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nome / Razão Social</label>
+              <input type="text" id="emi-nome" placeholder="Nome completo ou razão social">
+            </div>
+            <div class="form-group">
+              <label>CPF / CNPJ / RG</label>
+              <input type="text" id="emi-doc" placeholder="000.000.000-00" oninput="formatarDoc(this)">
+            </div>
+            <div class="form-group span2">
+              <label>Endereço Completo</label>
+              <input type="text" id="emi-end" placeholder="Rua, número, bairro, cidade - UF, CEP">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Referência / Cidade</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Referente a</label>
+              <textarea id="descricao" rows="2" placeholder="Descreva o motivo do pagamento..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Cidade (para o recibo)</label>
+              <input type="text" id="cidade" placeholder="Ex: Patos de Minas - MG" value="Patos de Minas - MG">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">
+            Assinatura do Emitente
+            <span style="font-size:.7rem;color:var(--cinza);font-weight:400;font-style:italic;margin-left:6px">(aparece apenas no recibo/PDF)</span>
+          </div>
+          <div style="border:1.5px dashed var(--dourado);border-radius:8px;padding:12px 14px 10px;background:#fffdf5">
+            <!-- Opção assinatura padrão -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;background:#f0ead6;border-radius:6px;border:1px solid #d4c89a">
+              <input type="checkbox" id="usar-assinatura-padrao" onchange="toggleAssinaturaPadrao(this)"
+                style="width:17px;height:17px;cursor:pointer;accent-color:var(--verde)">
+              <label for="usar-assinatura-padrao" style="font-size:.84rem;font-weight:700;color:var(--verde);cursor:pointer;text-transform:none;letter-spacing:0">
+                ✍️ Usar assinatura padrão (Welington)
+              </label>
+              <img id="preview-assinatura-padrao" src="data:image/jpeg;base64,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" 
+                alt="Assinatura Welington" style="height:32px;border-radius:4px;border:1px solid #d4c89a;padding:2px 6px;background:#fff;display:none">
+            </div>
+            <!-- Canvas assinatura manual -->
+            <div id="area-canvas-assinatura">
+              <canvas id="canvas-assinatura" width="600" height="90"
+                style="border:1.5px solid #e5dfc7;border-radius:5px;background:#fff;cursor:crosshair;display:block;max-width:100%"></canvas>
+              <div style="margin-top:7px">
+                <button class="btn btn-outline btn-sm" onclick="limparAssinatura()">🗑️ Limpar Assinatura</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="limparFormulario()">🔄 Novo Recibo</button>
+        <button class="btn btn-dourado" onclick="emitirRecibo()">✅ Emitir e Visualizar</button>
+      </div>
+    </div>
+
+    <!-- RELATÓRIO COMPLETO -->
+    <div id="tab-relatorio" class="panel">
+      <div class="panel-header">
+        <div class="ph-icon">📋</div>
+        <div><h2>Relatório Completo</h2><p>Todos os recibos emitidos</p></div>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="filtro-geral" placeholder="🔍 Buscar por nome, número..." oninput="renderRelatorioCompleto()">
+        <input type="date" id="filtro-data-ini" onchange="renderRelatorioCompleto()">
+        <input type="date" id="filtro-data-fim" onchange="renderRelatorioCompleto()">
+        <button class="btn btn-outline btn-sm" onclick="exportarCSV()">📥 Exportar CSV</button>
+      </div>
+      <div class="rel-table-wrap" id="tabela-completa"></div>
+      <div class="rel-summary" id="summary-completo"></div>
+    </div>
+
+    <!-- POR EMITENTE -->
+    <div id="tab-rel-emitente" class="panel">
+      <div class="panel-header">
+        <div class="ph-icon">👤</div>
+        <div><h2>Relatório por Emitente</h2><p>Agrupados por emitente</p></div>
+      </div>
+      <div class="filter-bar">
+        <select id="sel-emitente" onchange="renderRelatorioEmitente()"><option value="">-- Todos os emitentes --</option></select>
+        <input type="text" id="filtro-emitente" placeholder="🔍 Buscar emitente..." oninput="renderRelatorioEmitente()">
+      </div>
+      <div class="rel-table-wrap" id="tabela-emitente"></div>
+      <div class="rel-summary" id="summary-emitente"></div>
+    </div>
+
+    <!-- POR RECEBEDOR -->
+    <div id="tab-rel-recebedor" class="panel">
+      <div class="panel-header">
+        <div class="ph-icon">🏢</div>
+        <div><h2>Relatório por Recebedor</h2><p>Agrupados por recebedor</p></div>
+      </div>
+      <div class="filter-bar">
+        <select id="sel-recebedor" onchange="renderRelatorioRecebedor()"><option value="">-- Todos os recebedores --</option></select>
+        <input type="text" id="filtro-recebedor" placeholder="🔍 Buscar recebedor..." oninput="renderRelatorioRecebedor()">
+      </div>
+      <div class="rel-table-wrap" id="tabela-recebedor"></div>
+      <div class="rel-summary" id="summary-recebedor"></div>
+    </div>
+
+    <!-- CONFIGURAÇÕES -->
+    <div id="tab-configuracoes" class="panel">
+      <div class="panel-header">
+        <div class="ph-icon">⚙️</div>
+        <div><h2>Configurações</h2><p>Alterar senha e e-mail de recuperação</p></div>
+      </div>
+      <div class="form-body">
+        <div id="cfg-app-erro" class="login-erro" style="margin-bottom:14px"></div>
+        <div id="cfg-app-sucesso" class="login-sucesso" style="margin-bottom:14px"></div>
+        <div class="form-section">
+          <div class="form-section-title">Alterar Senha</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Senha Atual</label>
+              <input type="password" id="cfg-atual" placeholder="Senha atual">
+            </div>
+            <div class="form-group" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:11px">
+              <div class="form-group">
+                <label>Nova Senha</label>
+                <input type="password" id="cfg-nova" placeholder="Nova senha">
+              </div>
+              <div class="form-group">
+                <label>Confirmar Nova Senha</label>
+                <input type="password" id="cfg-confirma-nova" placeholder="Repita a nova senha">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">E-mail de Recuperação</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>E-mail cadastrado</label>
+              <input type="email" id="cfg-email-app" placeholder="seu@email.com">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-dourado" onclick="salvarConfigApp()">💾 Salvar Configurações</button>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL PREVIEW -->
+<div class="modal-overlay" id="modal-preview">
+  <div class="modal-box">
+    <div class="modal-toolbar">
+      <h3>📄 Visualização do Recibo</h3>
+      <div class="modal-toolbar-btns">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="executarImpressao()">🖨️ Imprimir</button>
+        <button class="btn btn-pdf btn-sm" onclick="salvarPDF()">📥 Salvar PDF</button>
+        <button class="modal-close" onclick="fecharModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-scroll">
+      <div id="recibo-preview"></div>
+    </div>
+  </div>
+</div>
+
+<div id="print-wrap" style="display:none"></div>
+
+<div class="pdf-loading" id="pdf-loading">
+  <div class="spinner"></div>
+  <div style="font-size:.95rem;font-weight:700">Gerando PDF, aguarde...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================= AUTH ============================= */
+const AUTH_KEY  = 'recibos_auth';
+const DATA_KEY  = 'recibos_v3';
+
+function getAuth(){try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null')}catch{return null}}
+function saveAuth(a){localStorage.setItem(AUTH_KEY,JSON.stringify(a))}
+
+function hashSimples(s){
+  // hash simples para armazenamento local (não criptografia real)
+  let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return String(h>>>0);
+}
+
+function initAuth(){
+  const auth=getAuth();
+  if(!auth){
+    // Primeiro acesso
+    document.getElementById('painel-login').style.display='none';
+    document.getElementById('painel-config').style.display='block';
+  }
+}
+
+function toggleSenha(id,btn){
+  const inp=document.getElementById(id);
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈'}
+  else{inp.type='password';btn.textContent='👁️'}
+}
+
+function fazerLogin(){
+  const auth=getAuth();
+  const s=document.getElementById('campo-senha').value;
+  const erro=document.getElementById('login-erro');
+  if(!s){erro.textContent='Digite a senha.';erro.style.display='block';return}
+  if(hashSimples(s)===auth.senhaHash){
+    erro.style.display='none';
+    document.getElementById('tela-login').style.display='none';
+    document.getElementById('app').style.display='block';
+    initApp();
+  }else{
+    erro.textContent='❌ Senha incorreta. Tente novamente.';
+    erro.style.display='block';
+    document.getElementById('campo-senha').value='';
+  }
+}
+
+function fazerLogout(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('tela-login').style.display='flex';
+  document.getElementById('campo-senha').value='';
+  document.getElementById('login-erro').style.display='none';
+  document.getElementById('painel-login').style.display='block';
+  document.getElementById('painel-recuperacao').style.display='none';
+}
+
+function salvarConfig(){
+  const s=document.getElementById('cfg-senha').value;
+  const c=document.getElementById('cfg-confirma').value;
+  const e=document.getElementById('cfg-email').value.trim();
+  const err=document.getElementById('cfg-erro');
+  if(!s||s.length<4){err.textContent='A senha deve ter pelo menos 4 caracteres.';err.style.display='block';return}
+  if(s!==c){err.textContent='As senhas não coincidem.';err.style.display='block';return}
+  if(!e||!e.includes('@')){err.textContent='Digite um e-mail válido.';err.style.display='block';return}
+  saveAuth({senhaHash:hashSimples(s),email:e});
+  err.style.display='none';
+  document.getElementById('painel-config').style.display='none';
+  document.getElementById('painel-login').style.display='block';
+  showToast('✅ Configuração salva! Faça login.');
+}
+
+/* RECUPERAÇÃO */
+let _senhaTemp='';
+function mostrarRecuperacao(){
+  document.getElementById('painel-login').style.display='none';
+  document.getElementById('painel-recuperacao').style.display='block';
+  document.getElementById('rec-passo1').style.display='block';
+  document.getElementById('rec-passo2').style.display='none';
+  document.getElementById('rec-erro').style.display='none';
+  document.getElementById('rec-sucesso').style.display='none';
+}
+function voltarLogin(){
+  document.getElementById('painel-recuperacao').style.display='none';
+  document.getElementById('painel-login').style.display='block';
+  document.getElementById('login-erro').style.display='none';
+}
+
+async function enviarRecuperacao(){
+  const email=document.getElementById('campo-email-rec').value.trim();
+  const auth=getAuth();
+  const erro=document.getElementById('rec-erro');
+  const suc=document.getElementById('rec-sucesso');
+  const btn=document.querySelector('#rec-passo1 .btn-login');
+  erro.style.display='none';suc.style.display='none';
+
+  if(!email){erro.textContent='Digite o e-mail.';erro.style.display='block';return}
+  if(!auth||email.toLowerCase()!==auth.email.toLowerCase()){
+    erro.textContent='❌ E-mail não encontrado nos registros.';erro.style.display='block';return;
+  }
+
+  // Gera senha temporária
+  _senhaTemp=Math.random().toString(36).slice(-8).toUpperCase();
+
+  // Loading no botão
+  btn.disabled=true;
+  btn.textContent='⏳ Enviando...';
+
+  try{
+    await emailjs.send('financeiro','template_f8d4swn',{
+      to_email: auth.email,
+      senha_temp: _senhaTemp
+    });
+    // Sucesso
+    document.getElementById('senha-temp-display').textContent='';
+    suc.textContent='✅ E-mail enviado para '+auth.email+'! Verifique sua caixa de entrada.';
+    suc.style.display='block';
+    document.getElementById('rec-passo1').style.display='none';
+    document.getElementById('rec-passo2').style.display='block';
+  }catch(e){
+    erro.textContent='❌ Falha ao enviar e-mail. Verifique sua conexão e tente novamente. ('+( e.text||e.message||'erro desconhecido')+')';
+    erro.style.display='block';
+    console.error('EmailJS erro:',e);
+  }finally{
+    btn.disabled=false;
+    btn.textContent='📧 Enviar Nova Senha';
+  }
+}
+
+function confirmarNovaSenha(){
+  const nova=document.getElementById('campo-nova-senha').value;
+  const conf=document.getElementById('campo-confirma-senha').value;
+  const erro=document.getElementById('rec-erro');
+  erro.style.display='none';
+  if(!nova||nova.length<4){erro.textContent='A nova senha deve ter pelo menos 4 caracteres.';erro.style.display='block';return}
+  if(nova!==conf){erro.textContent='As senhas não coincidem.';erro.style.display='block';return}
+  const auth=getAuth();
+  auth.senhaHash=hashSimples(nova);
+  saveAuth(auth);
+  voltarLogin();
+  showToast('✅ Senha redefinida com sucesso!');
+}
+
+/* CONFIGURAÇÕES APP */
+function carregarConfigApp(){
+  const auth=getAuth();
+  if(auth) document.getElementById('cfg-email-app').value=auth.email||'';
+}
+function salvarConfigApp(){
+  const atual=document.getElementById('cfg-atual').value;
+  const nova=document.getElementById('cfg-nova').value;
+  const conf=document.getElementById('cfg-confirma-nova').value;
+  const email=document.getElementById('cfg-email-app').value.trim();
+  const err=document.getElementById('cfg-app-erro');
+  const suc=document.getElementById('cfg-app-sucesso');
+  err.style.display='none';suc.style.display='none';
+  const auth=getAuth();
+  if(!email||!email.includes('@')){err.textContent='Digite um e-mail válido.';err.style.display='block';return}
+  if(nova||conf||atual){
+    if(hashSimples(atual)!==auth.senhaHash){err.textContent='❌ Senha atual incorreta.';err.style.display='block';return}
+    if(nova.length<4){err.textContent='A nova senha deve ter pelo menos 4 caracteres.';err.style.display='block';return}
+    if(nova!==conf){err.textContent='As senhas não coincidem.';err.style.display='block';return}
+    auth.senhaHash=hashSimples(nova);
+  }
+  auth.email=email;
+  saveAuth(auth);
+  suc.textContent='✅ Configurações salvas com sucesso!';suc.style.display='block';
+  document.getElementById('cfg-atual').value='';
+  document.getElementById('cfg-nova').value='';
+  document.getElementById('cfg-confirma-nova').value='';
+  setTimeout(()=>suc.style.display='none',3000);
+}
+
+/* ============================= APP ============================= */
+const DADOS_DUNORTE={
+  nome:'Dunorte Comércio de Madeiras LTDA',
+  doc:'14.302.501/0001-37',
+  end:'Avenida Juscelino Kubitschek de Oliveira, 608, Jardim Paulistano, Patos de Minas - MG'
+};
+
+function preencherDadosDunorte(prefixo){
+  document.getElementById(prefixo+'-nome').value=DADOS_DUNORTE.nome;
+  document.getElementById(prefixo+'-doc').value=DADOS_DUNORTE.doc;
+  document.getElementById(prefixo+'-end').value=DADOS_DUNORTE.end;
+}
+
+function initApp(){
+  atualizarNumDisplay();
+  document.getElementById('data-emissao').value=dataFormatada(new Date());
+  document.getElementById('cidade').value='Patos de Minas - MG';
+  ['rec-nome','rec-doc','rec-end'].forEach(id=>document.getElementById(id).value='');
+  initCanvas();
+  carregarConfigApp();
+}
+
+/* STORAGE */
+function getRecibos(){try{return JSON.parse(localStorage.getItem(DATA_KEY)||'[]')}catch{return[]}}
+function saveRecibos(r){localStorage.setItem(DATA_KEY,JSON.stringify(r))}
+function getNextNum(){const r=getRecibos();return r.length===0?1:Math.max(...r.map(x=>x.numero))+1}
+
+function atualizarNumDisplay(){
+  const n=getNextNum(),s=String(n).padStart(4,'0');
+  if(document.getElementById('num-recibo'))document.getElementById('num-recibo').value=s;
+  document.getElementById('header-num').textContent='Nº '+s;
+}
+function dataFormatada(d){return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}
+function dataExtenso(d){
+  const m=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return d.getDate()+' de '+m[d.getMonth()]+' de '+d.getFullYear();
+}
+function dataISO(d){return d.toISOString().split('T')[0]}
+
+/* TABS */
+function showTab(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='relatorio') renderRelatorioCompleto();
+  if(name==='rel-emitente'){populateSelects();renderRelatorioEmitente()}
+  if(name==='rel-recebedor'){populateSelects();renderRelatorioRecebedor()}
+  if(name==='configuracoes') carregarConfigApp();
+}
+
+/* FORMATAÇÃO */
+function formatarValor(el){
+  let v=el.value.replace(/\D/g,'');
+  if(!v){el.value='';return}
+  el.value=parseFloat((parseInt(v)/100).toFixed(2)).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function formatarDoc(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length<=11){
+    v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+  }else{
+    v=v.replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3')
+       .replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+  }
+  el.value=v;
+}
+
+/* EXTENSO */
+const _u=['','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+const _d=['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+const _c=['','cem','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+function numExtenso(n){
+  n=Math.round(n);if(n===0)return'zero';if(n<0)return'menos '+numExtenso(-n);
+  let r='';
+  if(n>=1e6){const m=Math.floor(n/1e6);r+=numExtenso(m)+(m===1?' milhão':' milhões');n%=1e6;if(n>0)r+=' e '}
+  if(n>=1000){const m=Math.floor(n/1000);r+=(m===1?'mil':numExtenso(m)+' mil');n%=1000;if(n>0)r+=' e '}
+  if(n>=100){const c=Math.floor(n/100);r+=(n%100===0?_c[c]:(c===1?'cento':_c[c]));n%=100;if(n>0)r+=' e '}
+  if(n>=20){r+=_d[Math.floor(n/10)];if(n%10>0)r+=' e '+_u[n%10]}else if(n>0)r+=_u[n];
+  return r;
+}
+function gerarExtenso(){
+  const raw=document.getElementById('valor').value.replace(/\./g,'').replace(',','.');
+  const val=parseFloat(raw);
+  if(isNaN(val)||val===0){document.getElementById('valor-extenso').value='';return}
+  const ip=Math.floor(val),cp=Math.round((val-ip)*100);
+  let t=numExtenso(ip)+(ip===1?' real':' reais');
+  if(cp>0)t+=' e '+numExtenso(cp)+(cp===1?' centavo':' centavos');
+  document.getElementById('valor-extenso').value=t.charAt(0).toUpperCase()+t.slice(1);
+}
+
+/* CANVAS */
+let ctx,desenhando=false;
+function initCanvas(){
+  const c=document.getElementById('canvas-assinatura');
+  c.width=Math.min(600,(c.parentElement.offsetWidth||640)-28);
+  ctx=c.getContext('2d');
+  ctx.strokeStyle='#111';ctx.lineWidth=1.8;ctx.lineCap='round';ctx.lineJoin='round';
+  function pos(e){const r=c.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.clientX-r.left,y:e.clientY-r.top}}
+  c.addEventListener('mousedown',e=>{desenhando=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+  c.addEventListener('mousemove',e=>{if(!desenhando)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+  c.addEventListener('mouseup',()=>desenhando=false);
+  c.addEventListener('mouseleave',()=>desenhando=false);
+  c.addEventListener('touchstart',e=>{e.preventDefault();desenhando=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
+  c.addEventListener('touchmove',e=>{e.preventDefault();if(!desenhando)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()},{passive:false});
+  c.addEventListener('touchend',()=>desenhando=false);
+}
+function limparAssinatura(){const c=document.getElementById('canvas-assinatura');ctx.clearRect(0,0,c.width,c.height)}
+
+const ASSINATURA_PADRAO='data:image/jpeg;base64,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';
+
+function toggleAssinaturaPadrao(cb){
+  const area=document.getElementById('area-canvas-assinatura');
+  const prev=document.getElementById('preview-assinatura-padrao');
+  if(cb.checked){area.style.display='none';prev.style.display='inline-block'}
+  else{area.style.display='block';prev.style.display='none'}
+}
+
+function getAssinatura(){
+  if(document.getElementById('usar-assinatura-padrao').checked) return ASSINATURA_PADRAO;
+  const c=document.getElementById('canvas-assinatura');
+  const d=ctx.getImageData(0,0,c.width,c.height).data;
+  for(let i=3;i<d.length;i+=4)if(d[i]>0)return c.toDataURL();
+  return null;
+}
+
+/* MONTAR RECIBO */
+function montarRecibo(r){
+  const ass=r.assinatura
+    ?`<div class="rc-assinatura-img"><img src="${r.assinatura}" alt="Assinatura"></div>`
+    :`<div class="rc-assinatura-img" style="height:42px"></div>`;
+  const cidadeData=(r.cidade||'_________________________')+', '+r.dataExtenso;
+  return`
+    <div class="rc-topo">
+      <div class="rc-num-box"><span class="rc-num-label">Nº</span><span class="rc-num-val">${r.numero}</span></div>
+      <div class="rc-titulo">R E C I B O</div>
+      <div class="rc-valor-box">
+        <div class="rc-valor-label-topo">Valor</div>
+        <div class="rc-valor-input-area">${r.valor?'R$ '+r.valor:''}</div>
+      </div>
+    </div>
+    <div class="rc-linha">
+      <span class="rc-campo-label">Recebi(emos) de ........... :</span>
+      <div class="rc-campo-valor">${r.recebedor.nome}</div>
+    </div>
+    <div class="rc-linha">
+      <span class="rc-campo-label">CPF / CNPJ ................... :</span>
+      <div class="rc-campo-valor">${r.recebedor.doc||'&nbsp;'}</div>
+    </div>
+    <div class="rc-linha">
+      <span class="rc-campo-label">Endereço ....................... :</span>
+      <div class="rc-campo-valor">${r.recebedor.end||'&nbsp;'}</div>
+    </div>
+    <div class="rc-importancia-linha" style="margin-top:6px">
+      <span class="rc-importancia-label">A importância de ......... :</span>
+      <span class="rc-importancia-val">${r.valorExtenso||'&nbsp;'}</span>
+    </div>
+    <div class="rc-linha">
+      <span class="rc-campo-label">Referente ..................... :</span>
+      <div class="rc-campo-valor multi">${r.descricao||'&nbsp;'}</div>
+    </div>
+    <div class="rc-firmamos">Para maior clareza firmamos o presente.</div>
+    <div class="rc-cidade-data">
+      <div class="rc-data-val">${cidadeData}</div>
+    </div>
+    <div class="rc-emitente-bloco">
+      <div class="rc-linha">
+        <span class="rc-campo-label">Emitente ...................... :</span>
+        <div class="rc-campo-valor">${r.emitente.nome}</div>
+      </div>
+      <div class="rc-linha">
+        <span class="rc-campo-label">CNPJ / CPF / RG .......... :</span>
+        <div class="rc-campo-valor">${r.emitente.doc}</div>
+      </div>
+      <div class="rc-linha">
+        <span class="rc-campo-label">Endereço ....................... :</span>
+        <div class="rc-campo-valor">${r.emitente.end||'&nbsp;'}</div>
+      </div>
+    </div>
+    <div class="rc-assinatura-linha">
+      <span class="rc-assinatura-label">Assinatura .................... :</span>
+      <div class="rc-assinatura-area">
+        ${ass}
+        <div class="rc-assinatura-linha-base"></div>
+      </div>
+    </div>`;
+}
+
+/* EMITIR */
+function emitirRecibo(){
+  const ob=['rec-nome','emi-nome','valor'];
+  let ok=true;
+  ob.forEach(id=>{const el=document.getElementById(id);if(!el.value.trim()){el.style.borderColor='#dc2626';ok=false}else el.style.borderColor=''});
+  if(!ok){showToast('❌ Preencha todos os campos obrigatórios!',true);return}
+  const num=getNextNum();
+  const r={
+    numero:num,data:document.getElementById('data-emissao').value,
+    dataExtenso:dataExtenso(new Date()),dataISO:dataISO(new Date()),
+    cidade:document.getElementById('cidade').value.trim(),
+    valor:document.getElementById('valor').value,
+    valorNum:parseFloat(document.getElementById('valor').value.replace(/\./g,'').replace(',','.')),
+    valorExtenso:document.getElementById('valor-extenso').value,
+    descricao:document.getElementById('descricao').value,
+    recebedor:{nome:document.getElementById('rec-nome').value,doc:document.getElementById('rec-doc').value,end:document.getElementById('rec-end').value},
+    emitente:{nome:document.getElementById('emi-nome').value,doc:document.getElementById('emi-doc').value,end:document.getElementById('emi-end').value},
+    assinatura:getAssinatura(),
+  };
+  const lista=getRecibos();lista.push(r);saveRecibos(lista);
+  atualizarNumDisplay();
+  abrirPreview(r);
+  showToast('✅ Recibo Nº '+String(num).padStart(4,'0')+' emitido!');
+}
+
+/* MODAL */
+let _reciboAtual=null;
+function abrirPreview(r){_reciboAtual=r;document.getElementById('recibo-preview').innerHTML=montarRecibo(r);document.getElementById('modal-preview').classList.add('open')}
+function fecharModal(){document.getElementById('modal-preview').classList.remove('open')}
+document.getElementById('modal-preview').addEventListener('click',function(e){if(e.target===this)fecharModal()});
+
+/* IMPRIMIR */
+function executarImpressao(){
+  if(!_reciboAtual){showToast('Nenhum recibo carregado.',true);return}
+  const html=montarRecibo(_reciboAtual);
+  const wrap=document.getElementById('print-wrap');
+  wrap.innerHTML=`
+    <div style="width:100%;padding:8px 14px 0">
+      <div id="recibo-preview" style="margin-bottom:10px">${html}</div>
+      <div style="border-top:2px dashed #999;margin:6px 0 10px;text-align:center;font-size:10px;color:#777;font-family:Arial,sans-serif">✂ — — — — — — — — — — — — — — — — — — — — — — — — — — — — — —</div>
+      <div id="recibo-preview">${html}</div>
+    </div>`;
+  wrap.style.display='block';
+  setTimeout(()=>{window.print();setTimeout(()=>{wrap.style.display='none';wrap.innerHTML=''},900)},180);
+}
+function imprimirIdx(idx){abrirPreview(getRecibos()[idx]);setTimeout(()=>executarImpressao(),420)}
+
+/* PDF */
+async function salvarPDF(idx){
+  if(idx!==undefined){abrirPreview(getRecibos()[idx]);await delay(440)}
+  if(!_reciboAtual){showToast('Nenhum recibo carregado.',true);return}
+  const load=document.getElementById('pdf-loading');load.classList.add('open');
+  try{
+    const el=document.getElementById('recibo-preview');
+    const canvas=await html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#d4d0d0',logging:false});
+    const img=canvas.toDataURL('image/jpeg',.96);
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    const mg=12,iw=pw-mg*2,ih=(canvas.height*iw)/canvas.width;
+    const yo=Math.max(mg,(ph-ih)/2);
+    pdf.addImage(img,'JPEG',mg,yo,iw,Math.min(ih,ph-mg*2));
+    pdf.save(`Recibo_${String(_reciboAtual.numero).padStart(4,'0')}_${_reciboAtual.recebedor.nome.replace(/\s+/g,'_')}.pdf`);
+    showToast('📥 PDF salvo com sucesso!');
+  }catch(e){showToast('❌ Erro ao gerar PDF.',true);console.error(e)}
+  finally{load.classList.remove('open')}
+}
+function delay(ms){return new Promise(res=>setTimeout(res,ms))}
+
+/* LIMPAR */
+function limparFormulario(){
+  ['rec-nome','rec-doc','rec-end','emi-nome','emi-doc','emi-end','valor','valor-extenso','descricao'].forEach(id=>document.getElementById(id).value='');
+  // Restaurar cidade padrão, mantendo o campo editável.
+  document.getElementById('cidade').value='Patos de Minas - MG';
+  ['rec-nome','rec-doc','rec-end'].forEach(id=>document.getElementById(id).value='');
+  // Resetar assinatura
+  document.getElementById('usar-assinatura-padrao').checked=false;
+  document.getElementById('area-canvas-assinatura').style.display='block';
+  document.getElementById('preview-assinatura-padrao').style.display='none';
+  limparAssinatura();
+  atualizarNumDisplay();
+  document.getElementById('data-emissao').value=dataFormatada(new Date());
+}
+
+/* RELATÓRIOS */
+function tabelaHTML(hs,rows,empty){
+  if(!rows.length)return`<div class="empty-state"><div class="es-icon">📄</div><p>${empty}</p></div>`;
+  return`<table><thead><tr>${hs.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function botoesAcao(idx){
+  return`<button class="btn btn-outline btn-sm" title="Visualizar" onclick="visualizarIdx(${idx})">👁️</button>
+<button class="btn btn-outline btn-sm" title="Imprimir" onclick="imprimirIdx(${idx})" style="margin-left:3px">🖨️</button>
+<button class="btn btn-pdf btn-sm" title="PDF" onclick="salvarPDF(${idx})" style="margin-left:3px">📥</button>
+<button class="btn btn-danger btn-sm" title="Excluir" onclick="excluirRecibo(${idx})" style="margin-left:3px">🗑️</button>`;
+}
+function visualizarIdx(idx){abrirPreview(getRecibos()[idx])}
+function excluirRecibo(idx){
+  if(!confirm('Confirmar exclusão?'))return;
+  const l=getRecibos();l.splice(idx,1);saveRecibos(l);
+  renderRelatorioCompleto();showToast('🗑️ Recibo excluído.');
+}
+function renderRelatorioCompleto(){
+  const busca=document.getElementById('filtro-geral').value.toLowerCase();
+  const dI=document.getElementById('filtro-data-ini').value;
+  const dF=document.getElementById('filtro-data-fim').value;
+  const all=getRecibos();let lista=all.slice();
+  if(busca)lista=lista.filter(r=>r.recebedor.nome.toLowerCase().includes(busca)||r.emitente.nome.toLowerCase().includes(busca)||String(r.numero).includes(busca)||r.recebedor.doc.includes(busca)||r.emitente.doc.includes(busca));
+  if(dI)lista=lista.filter(r=>r.dataISO>=dI);if(dF)lista=lista.filter(r=>r.dataISO<=dF);
+  const rows=lista.map(r=>{const ri=all.indexOf(r);return`<tr>
+    <td><span class="badge badge-dourado">Nº ${String(r.numero).padStart(4,'0')}</span></td>
+    <td>${r.data}</td>
+    <td>${r.recebedor.nome}<br><small style="color:#6b7280">${r.recebedor.doc}</small></td>
+    <td>${r.emitente.nome}<br><small style="color:#6b7280">${r.emitente.doc}</small></td>
+    <td style="font-weight:700;color:#1a472a">R$ ${r.valor}</td>
+    <td>${r.descricao?r.descricao.substring(0,32)+(r.descricao.length>32?'…':''):'-'}</td>
+    <td style="white-space:nowrap">${botoesAcao(ri)}</td>
+  </tr>`});
+  document.getElementById('tabela-completa').innerHTML=tabelaHTML(['Nº','Data','Recebedor','Emitente','Valor','Referente','Ações'],rows,'Nenhum recibo encontrado.');
+  const tot=lista.reduce((s,r)=>s+r.valorNum,0);
+  document.getElementById('summary-completo').innerHTML=`
+    <div class="summary-card"><div class="sc-label">Total de Recibos</div><div class="sc-value">${lista.length}</div></div>
+    <div class="summary-card"><div class="sc-label">Valor Total</div><div class="sc-value">R$ ${tot.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    <div class="summary-card"><div class="sc-label">Emitentes Únicos</div><div class="sc-value">${[...new Set(lista.map(r=>r.emitente.nome))].length}</div></div>
+    <div class="summary-card"><div class="sc-label">Recebedores Únicos</div><div class="sc-value">${[...new Set(lista.map(r=>r.recebedor.nome))].length}</div></div>`;
+}
+function populateSelects(){
+  const lista=getRecibos();
+  const em=[...new Set(lista.map(r=>r.emitente.nome))].sort();
+  const re=[...new Set(lista.map(r=>r.recebedor.nome))].sort();
+  const sE=document.getElementById('sel-emitente'),sR=document.getElementById('sel-recebedor');
+  const vE=sE.value,vR=sR.value;
+  sE.innerHTML='<option value="">-- Todos os emitentes --</option>'+em.map(e=>`<option value="${e}"${e===vE?' selected':''}>${e}</option>`).join('');
+  sR.innerHTML='<option value="">-- Todos os recebedores --</option>'+re.map(r=>`<option value="${r}"${r===vR?' selected':''}>${r}</option>`).join('');
+}
+function renderRelatorioEmitente(){
+  const sel=document.getElementById('sel-emitente').value;
+  const busca=document.getElementById('filtro-emitente').value.toLowerCase();
+  const all=getRecibos();let lista=all.slice();
+  if(sel)lista=lista.filter(r=>r.emitente.nome===sel);
+  if(busca)lista=lista.filter(r=>r.emitente.nome.toLowerCase().includes(busca));
+  const rows=lista.map(r=>{const ri=all.indexOf(r);return`<tr>
+    <td><span class="badge badge-dourado">Nº ${String(r.numero).padStart(4,'0')}</span></td>
+    <td>${r.data}</td><td>${r.emitente.nome}<br><small style="color:#6b7280">${r.emitente.doc}</small></td>
+    <td>${r.recebedor.nome}</td><td style="font-weight:700;color:#1a472a">R$ ${r.valor}</td>
+    <td style="white-space:nowrap">${botoesAcao(ri)}</td></tr>`});
+  document.getElementById('tabela-emitente').innerHTML=tabelaHTML(['Nº','Data','Emitente','Recebedor','Valor','Ações'],rows,'Nenhum recibo encontrado.');
+  const tot=lista.reduce((s,r)=>s+r.valorNum,0);
+  document.getElementById('summary-emitente').innerHTML=`
+    <div class="summary-card"><div class="sc-label">Recibos</div><div class="sc-value">${lista.length}</div></div>
+    <div class="summary-card"><div class="sc-label">Valor Total</div><div class="sc-value">R$ ${tot.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>`;
+}
+function renderRelatorioRecebedor(){
+  const sel=document.getElementById('sel-recebedor').value;
+  const busca=document.getElementById('filtro-recebedor').value.toLowerCase();
+  const all=getRecibos();let lista=all.slice();
+  if(sel)lista=lista.filter(r=>r.recebedor.nome===sel);
+  if(busca)lista=lista.filter(r=>r.recebedor.nome.toLowerCase().includes(busca));
+  const rows=lista.map(r=>{const ri=all.indexOf(r);return`<tr>
+    <td><span class="badge badge-dourado">Nº ${String(r.numero).padStart(4,'0')}</span></td>
+    <td>${r.data}</td><td>${r.recebedor.nome}<br><small style="color:#6b7280">${r.recebedor.doc}</small></td>
+    <td>${r.emitente.nome}</td><td style="font-weight:700;color:#1a472a">R$ ${r.valor}</td>
+    <td style="white-space:nowrap">${botoesAcao(ri)}</td></tr>`});
+  document.getElementById('tabela-recebedor').innerHTML=tabelaHTML(['Nº','Data','Recebedor','Emitente','Valor','Ações'],rows,'Nenhum recibo encontrado.');
+  const tot=lista.reduce((s,r)=>s+r.valorNum,0);
+  document.getElementById('summary-recebedor').innerHTML=`
+    <div class="summary-card"><div class="sc-label">Recibos</div><div class="sc-value">${lista.length}</div></div>
+    <div class="summary-card"><div class="sc-label">Valor Total</div><div class="sc-value">R$ ${tot.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>`;
+}
+
+/* CSV */
+function exportarCSV(){
+  const lista=getRecibos();
+  if(!lista.length){showToast('Nenhum recibo para exportar.',true);return}
+  const h='Número,Data,Recebedor,CPF/CNPJ Recebedor,Emitente,CPF/CNPJ Emitente,Valor,Referente\n';
+  const rows=lista.map(r=>`${r.numero},"${r.data}","${r.recebedor.nome}","${r.recebedor.doc}","${r.emitente.nome}","${r.emitente.doc}","${r.valor}","${r.descricao||''}"`).join('\n');
+  const blob=new Blob(['\uFEFF'+h+rows],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='recibos.csv';a.click();
+}
+
+/* TOAST */
+function showToast(msg,err){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.style.background=err?'#dc2626':'#1a472a';t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* BOOT */
+window.addEventListener('load',()=>{initApp()});
+</script>
+</body>
+</html>
