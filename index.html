@@ -1126,9 +1126,19 @@ async function salvarPDF(idx){
     const{jsPDF}=window.jspdf;
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
     const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
-    const mg=12,iw=pw-mg*2,ih=(canvas.height*iw)/canvas.width;
-    const yo=Math.max(mg,(ph-ih)/2);
-    pdf.addImage(img,'JPEG',mg,yo,iw,Math.min(ih,ph-mg*2));
+    const mg=10,halfH=ph/2,maxW=pw-mg*2,maxH=halfH-mg*2;
+    let iw=maxW,ih=(canvas.height*iw)/canvas.width;
+    if(ih>maxH){ih=maxH;iw=(canvas.width*ih)/canvas.height}
+    const ix=(pw-iw)/2;
+    const y1=(halfH-ih)/2;
+    const y2=halfH+(halfH-ih)/2;
+    pdf.addImage(img,'JPEG',ix,y1,iw,ih);
+    pdf.setDrawColor(150);
+    pdf.setLineWidth(.35);
+    if(pdf.setLineDashPattern) pdf.setLineDashPattern([2,2],0);
+    pdf.line(mg,halfH,pw-mg,halfH);
+    if(pdf.setLineDashPattern) pdf.setLineDashPattern([],0);
+    pdf.addImage(img,'JPEG',ix,y2,iw,ih);
     pdf.save(`Recibo_${String(_reciboAtual.numero).padStart(4,'0')}_${_reciboAtual.recebedor.nome.replace(/\s+/g,'_')}.pdf`);
     showToast('📥 PDF salvo com sucesso!');
   }catch(e){showToast('❌ Erro ao gerar PDF.',true);console.error(e)}
